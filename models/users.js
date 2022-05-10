@@ -34,7 +34,8 @@ const userJoiSchema = Joi.object({
 });
 
 const schemas = {
-    signup: userJoiSchema
+    signup: userJoiSchema,
+    login: userJoiSchema,
 };
 const User = model('user', usersShema);
 
