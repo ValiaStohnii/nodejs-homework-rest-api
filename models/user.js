@@ -1,7 +1,7 @@
 const { Schema, model } = require('mongoose')
 const Joi = require("joi");
 
-const usersShema = Schema({
+const userShema = Schema({
     password: {
         type: String,
         required: [true, 'Password is required'],
@@ -20,10 +20,6 @@ const usersShema = Schema({
         type: String,
         default: null,
     },
-    owner: {
-      type: Schema.Types.ObjectId,
-      ref: 'user',
-    },
 }, { versionKey: false, timestamps: true });
 
 const userJoiSchema = Joi.object({
@@ -37,6 +33,6 @@ const schemas = {
     signup: userJoiSchema,
     login: userJoiSchema,
 };
-const User = model('user', usersShema);
+const User = model('user', userShema);
 
 module.exports = { User, schemas };

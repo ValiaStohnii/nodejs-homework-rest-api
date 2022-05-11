@@ -1,7 +1,10 @@
 const bcrypt = require('bcryptjs/dist/bcrypt');
 const express = require('express')
-const {User, schemas} = require('../../models/users')
+const {User, schemas} = require('../../models/user')
 const router = express.Router();
+const jwt = require('jsonwebtoken');
+const auth = require('../../middlewares/auth');
+const { SECRET_KEY } = process.env;
 
 router.post('/signup', async (req, res, next) => {
     try {
@@ -69,7 +72,13 @@ router.post('/login', async (req, res, next) => {
             });
             return;
         }
-        const token = 'mljblhb.nibiunnon.jivbiuvbis'
+
+        const payload = {
+            id: user._id
+        }
+
+        const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' })
+        await User.findByIdAndUpdate(user._id, { token });
         res.json({
             token,
             user: {
@@ -80,5 +89,22 @@ router.post('/login', async (req, res, next) => {
         next(error)
     }
 });
+
+router.get('/current', auth, async (req, res) => {
+    const { email } = req.user;
+    res.json({
+        email
+    })
+});
+
+router.get('/logout', auth, async (req, res, next) => {
+    try {
+        const { _id } = req.user;
+        await User.findByIdAndUpdate(_id, { token: null })
+        res.status(204).send()
+    } catch (error) {
+        next(error)
+    }
+})
 
 module.exports = router;
