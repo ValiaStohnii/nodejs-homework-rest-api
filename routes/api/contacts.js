@@ -4,11 +4,13 @@ const { isValidObjectId } = require('mongoose');
 const router = express.Router();
 
 const { Contact, schemas } = require('../../models/contact')
+const auth = require('../../middlewares/auth')
 
-
-router.get('/', async (req, res, next) => {
+router.get('/', auth, async (req, res, next) => {
+  const { _id } = req.user;
   try {
-    const contacts = await Contact.find();
+    const contacts = await Contact.find({ owner: _id })
+      .populate('owner', 'email');
     res.json({
       status: 'success',
       code: 200,
@@ -19,10 +21,11 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.get('/:contactId', async (req, res, next) => {
+router.get('/:contactId', auth, async (req, res, next) => {
+  const { _id } = req.user;
   try {
     const { contactId } = req.params;
-    const result = await Contact.findById(contactId);
+    const result = await Contact.findOne({ _id: contactId, owner: _id });
     if (!result) {
       res.status(404).json({
         status: 'error',
@@ -43,7 +46,8 @@ router.get('/:contactId', async (req, res, next) => {
   }
 });
 
-router.post('/', async (req, res, next) => {
+router.post('/', auth, async (req, res, next) => {
+  const { _id } = req.user;
   try {
     const { error } = schemas.add.validate(req.body);
     if (error) {
@@ -54,7 +58,7 @@ router.post('/', async (req, res, next) => {
       });
       return;
     }
-    const result = await Contact.create(req.body);
+    const result = await Contact.create({ ...req.body, owner: _id });
     res.status(201).json({
       status: 'success',
       code: 201,
@@ -68,7 +72,7 @@ router.post('/', async (req, res, next) => {
   res.json({ message: 'template message' })
 })
 
-router.delete('/:contactId', async (req, res, next) => {
+router.delete('/:contactId',auth, async (req, res, next) => {
   try {
     const { error } = schemas.add.validate(req.body);
     if (error) {
@@ -104,7 +108,7 @@ router.delete('/:contactId', async (req, res, next) => {
   res.json({ message: 'template message' })
 });
 
-router.put('/:contactId', async (req, res, next) => {
+router.put('/:contactId',auth, async (req, res, next) => {
   try {
     const { error } = schemas.add.validate(req.body);
     if (error) {
@@ -139,7 +143,7 @@ router.put('/:contactId', async (req, res, next) => {
   res.json({ message: 'template message' })
 })
 
-router.patch('/:contactId/favorite', async (req, res, next) => {
+router.patch('/:contactId/favorite',auth, async (req, res, next) => {
   try {
     const { error } = schemas.updateFavorite.validate(req.body);
     if (error) {
@@ -173,6 +177,5 @@ router.patch('/:contactId/favorite', async (req, res, next) => {
   }
   res.json({ message: 'template message' })
 })
-
 
 module.exports = router;
