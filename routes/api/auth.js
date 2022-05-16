@@ -114,20 +114,23 @@ router.get('/logout', auth, async (req, res, next) => {
     }
 })
 
-router.patch('/avatars', auth, upload.single('avatar'), async (req, res, next) =>{
-try {
-    const { originalname, path: tempUpload } = req.file;
-    const resultUpload = path.join(avatarsDir, originalname);
-    await fs.rename(tempUpload, resultUpload);
-    const avatarURL = path.join('avatars', originalname);
-    await User.findByIdAndUpdate(req.user._id, { avatarURL });
-    res.json({
-        avatarURL
-    })
-} catch (error) {
-    await fs.unlink(req.file.path);
-    next(error)
-}
-})
+router.patch('/avatars', auth, upload.single('avatar'), async (req, res, next) => {
+    try {
+        const { _id: id } = req.user;
+        const { originalname, path: tempUpload } = req.file;
+        const [extension] = originalname.split('.').reverse();
+        const fileName = `${id}.${extension};`
+        const resultUpload = path.join(avatarsDir, fileName);
+        await fs.rename(tempUpload, resultUpload);
+        const avatarURL = path.join('avatars', fileName);
+        await User.findByIdAndUpdate(req.user._id, { avatarURL });
+        res.json({
+            avatarURL
+        })
+    } catch (error) {
+        await fs.unlink(req.file.path);
+        next(error)
+    }
+});
 
 module.exports = router;
