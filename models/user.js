@@ -41,9 +41,15 @@ const userJoiSchema = Joi.object({
     token: Joi.string(),
 });
 
+const verifyEmailSchema = Joi.object({
+    email: Joi.string().email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } }).required(),
+
+})
+
 const schemas = {
     signup: userJoiSchema,
     login: userJoiSchema,
+    verifyEmail: verifyEmailSchema,
 };
 const User = model('user', userShema);
 

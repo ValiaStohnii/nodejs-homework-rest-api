@@ -80,6 +80,49 @@ router.get('/verify/:verificationToken', async (req, res, next) => {
     }
 });
 
+router.post('/verify', async (req, res, next) => {
+    try {
+        const { error } = schemas.verifyEmail.validate(req.body);
+        if (error) {
+            res.status(400).json({
+                status: 'Bad Request',
+                code: 400,
+                message: 'Помилка від Joi чи іншої бібліотеки валідації'
+            });
+            return;
+        }
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) {
+            res.status(401).json({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'Email or password is wrong'
+            });
+            return;
+        }
+        if (user.verify) {
+            res.status(400).json({
+                status: 'Bad Reques',
+                code: 400,
+                message: 'Verification has already been passed'
+            });
+            return;
+        }
+        const mail = {
+            to: email,
+            subject: 'Підвердьте реєстрацію на сайті',
+            html: `<a target="_blank" href="localhost:3000/api/auth/verify/${user.verificationToken}">Натисніть для підтвердження email</a>`,
+        };
+        await sendMail(mail);
+        res.json({
+            "massage": "Verification email sent"
+        })
+    } catch (error) {
+        next(error);
+    }
+});
+
 router.post('/login', async (req, res, next) => {
     try {
         const { error } = schemas.login.validate(req.body);
@@ -98,6 +141,14 @@ router.post('/login', async (req, res, next) => {
                 status: 'Unauthorized',
                 code: 401,
                 message: 'Email or password is wrong'
+            });
+            return;
+        }
+        if (!user.verify) {
+            res.status(401).json({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'Email not verify'
             });
             return;
         }
