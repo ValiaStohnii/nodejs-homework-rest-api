@@ -23,7 +23,15 @@ const userShema = Schema({
     avatarURL: {
         type: String,
         required: true,
-    }
+    },
+    verify: {
+        type: Boolean,
+        default: false,
+    },
+    verificationToken: {
+        type: String,
+        required: [true, 'Verify token is required'],
+    },
 }, { versionKey: false, timestamps: true });
 
 const userJoiSchema = Joi.object({
